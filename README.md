@@ -1,6 +1,8 @@
-# Blackjack By Athena
+# React Blackjack
 
 This is the game of Blackjack created in React.
+
+**Live App:** [delizo-blackjack.vercel.app](https://delizo-blackjack.vercel.app)
 
 Since there is no authentication implemented, all the stats are saved in `localStorage` with a fixed key.
 
@@ -26,9 +28,3 @@ RULES:
 - Push (dealer has same value as you) is a tie
 - Bust (going over 21) means a loss
 - If both player and dealer bust, the dealer wins
-
-## Support and Feedback
-
-Join the AthenaUS community!
-
-You can contact Athena if you have any questions or feedback by [sending an email](mailto:athena@parthenon.app) or joining her [Discord](https://discord.com/invite/5dzECDz) server.
