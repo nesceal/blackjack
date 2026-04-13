@@ -149,7 +149,7 @@ export const gameReducer = (
     case 'GAME_RESET':
       return {
         ...initialState,
-        balance: state.balance,
+        balance: state.balance || initialState.balance,
         bet: state.bet,
       };
 
