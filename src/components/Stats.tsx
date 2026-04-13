@@ -6,7 +6,7 @@ export const Stats: React.FC = () => {
   const { stats, updateStats } = useBlackjack();
 
   useEffect(() => {
-    const prevStats = localStorage.getItem('devthena-blackjack-stats');
+    const prevStats = localStorage.getItem('nai-react-blackjack-stats');
     if (prevStats) updateStats(JSON.parse(prevStats));
   }, [updateStats]);
 

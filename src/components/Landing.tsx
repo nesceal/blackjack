@@ -11,7 +11,7 @@ export const Landing: React.FC = () => {
   const { balance, bet, startGame, updateBet, updateUser } = useBlackjack();
 
   useEffect(() => {
-    const prevUser = localStorage.getItem('devthena-blackjack-user');
+    const prevUser = localStorage.getItem('nai-react-blackjack-user');
 
     if (prevUser) {
       updateUser(JSON.parse(prevUser));

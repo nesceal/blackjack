@@ -4,13 +4,13 @@ import { dealerPlay, drawCard, getHandValue } from './utils';
 
 export const gameReducer = (
   state: GameState,
-  action: GameAction
+  action: GameAction,
 ): GameState => {
   switch (action.type) {
     case 'STATS_UPDATE':
       localStorage.setItem(
-        'devthena-blackjack-stats',
-        JSON.stringify(action.payload)
+        'nai-react-blackjack-stats',
+        JSON.stringify(action.payload),
       );
 
       return {
@@ -20,8 +20,8 @@ export const gameReducer = (
 
     case 'USER_UPDATE':
       localStorage.setItem(
-        'devthena-blackjack-user',
-        JSON.stringify(action.payload)
+        'nai-react-blackjack-user',
+        JSON.stringify(action.payload),
       );
 
       return {
@@ -141,7 +141,7 @@ export const gameReducer = (
 
     case 'USER_DELETE':
       if (state.balance === 0) {
-        localStorage.removeItem('devthena-blackjack-user');
+        localStorage.removeItem('nai-react-blackjack-user');
       }
 
       return state;
