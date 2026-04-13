@@ -35,7 +35,7 @@ export const useBlackjack = () => {
   );
 
   const updateBet = useCallback(
-    (bet: number) => {
+    (bet: number | null) => {
       dispatch({ type: 'BET_UPDATE', payload: bet });
     },
     [dispatch]
@@ -61,8 +61,10 @@ export const useBlackjack = () => {
       dispatch({ type: 'GAME_END', payload: 'bust' });
     } else if (dealerHandValue > 21) {
       dispatch({ type: 'GAME_END', payload: 'dealer_bust' });
-    } else if (playerHandValue === 21) {
+    } else if (playerHandValue === 21 && state.playerHand.length === 2) {
       dispatch({ type: 'GAME_END', payload: 'blackjack' });
+    } else if (playerHandValue === 21 && state.playerHand.length > 2) {
+      dispatch({ type: 'GAME_END', payload: 'win' });
     } else if (dealerHandValue >= 17 && dealerHandValue > playerHandValue) {
       dispatch({ type: 'GAME_END', payload: 'lose' });
     } else if (dealerHandValue >= 17 && playerHandValue > dealerHandValue) {

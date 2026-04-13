@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { GAME_OVER_STATUS } from '../constants';
 import { useBlackjack } from '../hooks';
@@ -11,6 +11,12 @@ import styles from '../styles/blackjack.module.scss';
 
 export const Blackjack: React.FC = () => {
   const [isDouble, setIsDouble] = useState<boolean>(false);
+  const [gameKey, setGameKey] = useState(0);
+  const [displayDealerValue, setDisplayDealerValue] = useState(0);
+  const [displayPlayerValue, setDisplayPlayerValue] = useState(0);
+
+  const prevPlayerLengthRef = useRef(0);
+  const prevDealerLengthRef = useRef(0);
 
   const {
     stats,
@@ -25,17 +31,32 @@ export const Blackjack: React.FC = () => {
     playerHit,
     playerStand,
     removeUser,
+    resetGame,
     startGame,
     updateBet,
     updateStats,
     updateUser,
   } = useBlackjack();
 
-  const handleDouble = useCallback(async () => {
-    await setIsDouble(true);
+  const playerDealStart = prevPlayerLengthRef.current;
+  const dealerDealStart = prevDealerLengthRef.current;
+
+  const handleDouble = useCallback(() => {
+    setIsDouble(true);
     playerDouble();
   }, [playerDouble]);
 
+  const handlePlayAgain = useCallback(() => {
+    if (!bet) return;
+    prevPlayerLengthRef.current = 0;
+    prevDealerLengthRef.current = 0;
+    setGameKey(k => k + 1);
+    setDisplayDealerValue(0);
+    setDisplayPlayerValue(0);
+    startGame(bet);
+  }, [bet, startGame]);
+
+  // Schedule isGameOver after the last new card finishes animating
   useEffect(() => {
     if (!bet) return;
 
@@ -54,19 +75,23 @@ export const Blackjack: React.FC = () => {
       if (balance === 0) {
         removeUser();
       } else {
-        updateUser({
-          bet: newBet,
-          balance: balance,
-        });
+        updateUser({ bet: newBet, balance });
       }
     } else {
-      isGameOver();
+      const lastNewPlayerOrder = Math.max(playerHand.length - prevPlayerLengthRef.current - 1, 0);
+      const lastNewDealerOrder = Math.max(dealerHand.length - prevDealerLengthRef.current - 1, 0);
+      const lastNewOrder = Math.max(lastNewPlayerOrder, lastNewDealerOrder);
+      const delay = lastNewOrder * 500 + 600;
+      const timer = setTimeout(isGameOver, delay);
+      return () => clearTimeout(timer);
     }
   }, [
     balance,
     bet,
+    dealerHand,
     gameStatus,
     isDouble,
+    playerHand,
     stats,
     isGameOver,
     removeUser,
@@ -75,7 +100,27 @@ export const Blackjack: React.FC = () => {
     updateUser,
   ]);
 
-  let gameOver = GAME_OVER_STATUS.includes(gameStatus);
+  // Update displayed hand values after the last new card finishes animating
+  useEffect(() => {
+    if (!playerHand.length && !dealerHand.length) return;
+    const lastNewPlayerOrder = Math.max(playerHand.length - prevPlayerLengthRef.current - 1, 0);
+    const lastNewDealerOrder = Math.max(dealerHand.length - prevDealerLengthRef.current - 1, 0);
+    const lastNewOrder = Math.max(lastNewPlayerOrder, lastNewDealerOrder);
+    const delay = lastNewOrder * 500 + 600;
+    const timer = setTimeout(() => {
+      setDisplayDealerValue(getHandValue(dealerHand));
+      setDisplayPlayerValue(getHandValue(playerHand));
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [playerHand, dealerHand]);
+
+  // Update prev lengths — must be last so delay effects above read old values
+  useEffect(() => {
+    prevPlayerLengthRef.current = playerHand.length;
+    prevDealerLengthRef.current = dealerHand.length;
+  }, [playerHand, dealerHand]);
+
+  const gameOver = GAME_OVER_STATUS.includes(gameStatus);
 
   return (
     <div className={styles.game}>
@@ -84,12 +129,14 @@ export const Blackjack: React.FC = () => {
         <div className={styles.dealer}>
           <div>
             <p className={styles.name}>Dealer</p>
-            <p className={styles.value}>{getHandValue(dealerHand)}</p>
+            <p className={styles.value}>{displayDealerValue || ''}</p>
           </div>
           <div className={styles.cards}>
             {dealerHand.map((card, i) => (
               <CardBox
-                key={i}
+                key={`${gameKey}-${i}`}
+                animate={i >= dealerDealStart ? 'down' : undefined}
+                order={i >= dealerDealStart ? i - dealerDealStart : undefined}
                 small={dealerHand.length > 5}
                 suit={card.suit}
                 rank={card.rank}
@@ -110,25 +157,29 @@ export const Blackjack: React.FC = () => {
           <div className={styles.result}>
             <div>
               <p>RESULT: {getResultHeadline(gameStatus)}</p>
-              <button
-                disabled={!bet || bet > balance}
-                onClick={() => {
-                  if (bet) startGame(bet);
-                }}>
-                PLAY AGAIN
-              </button>
+              {balance === 0 ? (
+                <button onClick={resetGame}>RESET</button>
+              ) : (
+                <button
+                  disabled={!bet || bet > balance}
+                  onClick={handlePlayAgain}>
+                  PLAY AGAIN
+                </button>
+              )}
             </div>
           </div>
         )}
         <div className={styles.player}>
           <div>
             <p className={styles.name}>Player</p>
-            <p className={styles.value}>{getHandValue(playerHand)}</p>
+            <p className={styles.value}>{displayPlayerValue || ''}</p>
           </div>
           <div className={styles.cards}>
             {playerHand.map((card, i) => (
               <CardBox
-                key={i}
+                key={`${gameKey}-${i}`}
+                animate={i >= playerDealStart ? 'up' : undefined}
+                order={i >= playerDealStart ? i - playerDealStart : undefined}
                 small={playerHand.length > 5}
                 suit={card.suit}
                 rank={card.rank}

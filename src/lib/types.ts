@@ -19,6 +19,8 @@ export type Rank =
   | 'A';
 
 export interface Card {
+  animate?: 'up' | 'down';
+  order?: number;
   small?: boolean;
   suit: Suit;
   rank: Rank;
@@ -67,7 +69,7 @@ export type GameAction =
   | { type: 'STATS_UPDATE'; payload: GameStats }
   | { type: 'USER_UPDATE'; payload: UserBalance }
   | { type: 'MODAL_UPDATE'; payload: ModalObject }
-  | { type: 'BET_UPDATE'; payload: number }
+  | { type: 'BET_UPDATE'; payload: number | null }
   | { type: 'GAME_START'; payload: { bet: number; deck: Card[] } }
   | { type: 'DOUBLE' }
   | { type: 'HIT' }
@@ -83,5 +85,5 @@ export interface GameContextType {
 
 export interface BalanceProps {
   betDisabled?: boolean;
-  handleBetChange: Function;
+  handleBetChange: (bet: number | null) => void;
 }
